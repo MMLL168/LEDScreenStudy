@@ -1,564 +1,589 @@
-import React, { useState } from 'react';
-import { 
-  Cpu, 
-  MemoryStick, 
-  Zap, 
-  AlertTriangle, 
-  Activity,
-  Lightbulb,
-  Server,
-  LayoutDashboard,
-  GitCompare,
-  ListTodo,
-  Info,
-  Menu,
-  X
-} from 'lucide-react';
-
-// Main Application Component
-const App = () => {
-  const [activeView, setActiveView] = useState('overview');
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  const menuItems = [
-    { id: 'overview', label: '總覽與風險', icon: <LayoutDashboard size={20} /> },
-    { id: 'architecture', label: '系統架構', icon: <Server size={20} /> },
-    { id: 'led-compare', label: 'LED 選型對決', icon: <GitCompare size={20} /> },
-    { id: 'fpga-resource', label: 'FPGA 資源', icon: <Cpu size={20} /> },
-    { id: 'action-plan', label: '行動清單', icon: <ListTodo size={20} /> },
-  ];
-
-  return (
-    <div className="min-h-screen bg-slate-950 text-slate-200 font-sans selection:bg-cyan-500/30 flex flex-col md:flex-row">
-      {/* Mobile Header */}
-      <div className="md:hidden bg-slate-900 border-b border-slate-800 p-4 flex items-center justify-between sticky top-0 z-50">
-        <div className="flex items-center gap-3">
-          <div className="bg-cyan-600 p-1.5 rounded-lg">
-            <Activity className="text-white" size={20} />
-          </div>
-          <span className="font-bold text-white">LED Engineering Hub</span>
-        </div>
-        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-slate-300">
-          {isMobileMenuOpen ? <X /> : <Menu />}
-        </button>
-      </div>
-
-      {/* Mobile Menu Dropdown */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden bg-slate-900 border-b border-slate-800 absolute top-16 left-0 w-full z-40 shadow-2xl">
-          <nav className="p-4 space-y-2">
-            {menuItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => { setActiveView(item.id); setIsMobileMenuOpen(false); }}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium ${
-                  activeView === item.id ? 'bg-cyan-900/30 text-cyan-400' : 'text-slate-400'
-                }`}
-              >
-                {item.icon}
-                {item.label}
-              </button>
-            ))}
-          </nav>
-        </div>
-      )}
-
-      {/* Desktop Sidebar Navigation */}
-      <aside className="hidden md:flex w-64 flex-shrink-0 bg-slate-900 border-r border-slate-800 flex-col sticky top-0 h-screen overflow-y-auto">
-        <div className="p-6 border-b border-slate-800">
-          <div className="flex items-center gap-3 mb-1">
-            <div className="bg-cyan-600 p-2 rounded-lg shadow-lg shadow-cyan-500/20">
-              <Activity className="text-white" size={24} />
-            </div>
-            <h1 className="text-lg font-bold text-white tracking-tight">LED Project<br/><span className="text-cyan-400 text-sm font-normal">Engineering Hub</span></h1>
-          </div>
-        </div>
-        
-        <nav className="flex-1 py-4 px-3 space-y-1">
-          {menuItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setActiveView(item.id)}
-              className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-                activeView === item.id 
-                  ? 'bg-cyan-900/30 text-cyan-400 border border-cyan-500/30 shadow-sm' 
-                  : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
-              }`}
-            >
-              {item.icon}
-              {item.label}
-            </button>
-          ))}
-        </nav>
-
-        <div className="p-4 border-t border-slate-800">
-          <div className="bg-slate-800/50 rounded-lg p-3 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-xs font-bold text-white">
-              M
-            </div>
-            <div>
-              <div className="text-xs font-medium text-white">Marlon</div>
-              <div className="text-[10px] text-slate-400">Firmware Engineer</div>
-            </div>
-          </div>
-        </div>
-      </aside>
-
-      {/* Main Content Area */}
-      <main className="flex-1 p-4 md:p-8 overflow-x-hidden min-w-0">
-        <div className="max-w-6xl mx-auto pb-12">
-          {activeView === 'overview' && <OverviewPanel setActiveView={setActiveView} />}
-          {activeView === 'architecture' && <ArchitecturePanel />}
-          {activeView === 'led-compare' && <LedComparePanel />}
-          {activeView === 'fpga-resource' && <FpgaResourcePanel />}
-          {activeView === 'action-plan' && <ActionPlanPanel />}
-        </div>
-      </main>
-    </div>
-  );
-};
-
-// --- View Components ---
-
-const OverviewPanel = ({ setActiveView }) => (
-  <div className="space-y-6">
-    <header className="mb-6 md:mb-8">
-      <h2 className="text-2xl font-bold text-white mb-2">專案狀態總覽</h2>
-      <p className="text-slate-400 text-sm md:text-base">基於 Datasheets (AC701, AS16sch, LED Specs) 的快速風險評估。</p>
-    </header>
-
-    {/* Key Metrics Grid */}
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-      <DashboardCard 
-        title="FPGA 風險等級" 
-        status="Critical" 
-        color="red"
-        icon={<AlertTriangle size={24} />}
-        description="XC7A35T 資源嚴重不足 (若使用 16-bit LED)。"
-        action={() => setActiveView('fpga-resource')}
-      />
-      <DashboardCard 
-        title="LED 協議相容性" 
-        status="Incompatible" 
-        color="orange"
-        icon={<GitCompare size={24} />}
-        description="Everlight 與 Apex 協議完全不同，不可混用。"
-        action={() => setActiveView('led-compare')}
-      />
-      <DashboardCard 
-        title="電源管理 (PMIC)" 
-        status="Warning" 
-        color="yellow"
-        icon={<Zap size={24} />}
-        description="AnDAPT 需特別注意上電時序與大電流暫態。"
-        action={() => setActiveView('architecture')}
-      />
-    </div>
-
-    {/* Quick Summary */}
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 mt-6">
-      <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-        <Info size={20} className="text-cyan-400" />
-        執行摘要 (Executive Summary)
-      </h3>
-      <div className="prose prose-invert max-w-none text-slate-300 text-sm leading-relaxed space-y-4">
-        <p>
-          本專案目標為<strong>高密度小間距顯示屏</strong>。根據原理圖 <code>AS16sch.pdf</code>，目前的控制器核心為 <strong>Xilinx Artix-7 (XC7A35T)</strong>。
-        </p>
-        <ul className="list-disc pl-5 space-y-2 text-slate-400">
-          <li>
-            <strong className="text-slate-200">主要瓶頸：</strong> 若選擇 Apex 的 16-bit 高階 LED，XC7A35T 的邏輯單元 (LUTs) 恐無法支撐複雜的 PWM 生成與 Gamma 校正算法，建議升級至 <strong>XC7A75T/100T</strong>。
-          </li>
-          <li>
-            <strong className="text-slate-200">Layout 挑戰：</strong> DDR3L (MT41K256M16) 的 Fly-by 拓撲佈線要求極高；且 Apex LED 的備份訊號線 (Backup Line) 會增加 PCB 佈線難度。
-          </li>
-          <li>
-            <strong className="text-slate-200">MCU 整合：</strong> 你的 STM32/ESP32 經驗非常適合用於開發系統監控與參數配置介面 (via I2C/UART)，但不適合直接驅動面板。
-          </li>
-        </ul>
-      </div>
-    </div>
-  </div>
-);
-
-const ArchitecturePanel = () => (
-  <div className="space-y-6">
-    <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-      <Server className="text-cyan-500" /> 系統硬體架構
-    </h2>
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LED Display Project - Engineering Hub</title>
     
-    <div className="bg-slate-900 rounded-xl border border-slate-800 p-2 md:p-6 shadow-2xl overflow-hidden">
-      {/* Dynamic SVG Diagram - Improved ID uniqueness and sizing */}
-      <div className="w-full relative" style={{ paddingBottom: '50%' }}>
-         <svg viewBox="0 0 800 400" className="absolute top-0 left-0 w-full h-full drop-shadow-lg">
-            <defs>
-              <marker id="arrow-head-arch" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
-                <path d="M0,0 L0,6 L9,3 z" fill="#64748b" />
-              </marker>
-              <pattern id="grid-pattern-arch" width="20" height="20" patternUnits="userSpaceOnUse">
-                <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#1e293b" strokeWidth="1"/>
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#grid-pattern-arch)" opacity="0.5" />
+    <!-- 1. 引入 Tailwind CSS (用於樣式) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 2. 引入 React 和 ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    
+    <!-- 3. 引入 Babel (讓瀏覽器能看懂 JSX) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-            {/* Connecting Lines */}
-            <path d="M100,200 L240,200" stroke="#475569" strokeWidth="2" markerEnd="url(#arrow-head-arch)" />
-            <path d="M350,150 L350,90" stroke="#ef4444" strokeWidth="2" strokeDasharray="5,5" />
-            <path d="M350,250 L350,310" stroke="#eab308" strokeWidth="2" />
-            <path d="M460,200 L600,200" stroke="#a855f7" strokeWidth="4" markerEnd="url(#arrow-head-arch)" />
-            <path d="M350,360 L350,400" stroke="#22c55e" strokeWidth="2" />
-            <path d="M250,350 L300,250" stroke="#22c55e" strokeWidth="1" strokeDasharray="2,2" />
+    <!-- 自定義樣式調整 -->
+    <style>
+        /* 針對 iOS 的安全區域調整 */
+        .safe-area-pb {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        /* 隱藏滾動條但保留功能 */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-200">
+    <div id="root"></div>
 
-            {/* Components */}
-            <g transform="translate(20, 170)">
-              <rect width="80" height="60" rx="6" fill="#0f172a" stroke="#64748b" strokeWidth="2" />
-              <text x="40" y="35" textAnchor="middle" fill="#e2e8f0" fontSize="12">HDMI/DVI</text>
-            </g>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
 
-            <g transform="translate(250, 150)">
-              <rect width="210" height="100" rx="8" fill="#1e293b" stroke="#06b6d4" strokeWidth="3" className="drop-shadow-[0_0_20px_rgba(6,182,212,0.2)]" />
-              <text x="105" y="40" textAnchor="middle" fill="#ffffff" fontWeight="bold" fontSize="16">Artix-7 FPGA</text>
-              <text x="105" y="60" textAnchor="middle" fill="#94a3b8" fontSize="12">XC7A35T / 100T</text>
-            </g>
-
-            <g transform="translate(290, 20)">
-              <rect width="120" height="60" rx="4" fill="#0f172a" stroke="#ef4444" strokeWidth="2" />
-              <text x="60" y="25" textAnchor="middle" fill="#ef4444" fontSize="12" fontWeight="bold">DDR3L RAM</text>
-              <text x="60" y="45" textAnchor="middle" fill="#94a3b8" fontSize="10">Frame Buffer</text>
-            </g>
-
-            <g transform="translate(290, 320)">
-              <rect width="120" height="60" rx="4" fill="#0f172a" stroke="#eab308" strokeWidth="2" />
-              <text x="60" y="25" textAnchor="middle" fill="#eab308" fontSize="12" fontWeight="bold">SPI Flash</text>
-              <text x="60" y="45" textAnchor="middle" fill="#94a3b8" fontSize="10">Bitstream</text>
-            </g>
-
-            <g transform="translate(600, 140)">
-              <rect width="180" height="120" rx="4" fill="#0f172a" stroke="#a855f7" strokeWidth="2" />
-              <rect x="10" y="10" width="160" height="100" fill="#1e1b4b" rx="2" />
-              <text x="90" y="65" textAnchor="middle" fill="#a855f7" fontSize="14" fontWeight="bold">LED Panel</text>
-               <circle cx="50" cy="40" r="3" fill="#a855f7" className="animate-pulse" />
-               <circle cx="90" cy="40" r="3" fill="#a855f7" className="animate-pulse" style={{animationDelay: '100ms'}} />
-               <circle cx="130" cy="40" r="3" fill="#a855f7" className="animate-pulse" style={{animationDelay: '200ms'}} />
-            </g>
-
-            <g transform="translate(140, 320)">
-               <rect width="100" height="50" rx="4" fill="#064e3b" stroke="#22c55e" strokeWidth="1" strokeDasharray="4,4" opacity="0.8"/>
-               <text x="50" y="20" textAnchor="middle" fill="#4ade80" fontSize="10" fontWeight="bold">STM32/ESP32</text>
-               <text x="50" y="35" textAnchor="middle" fill="#a7f3d0" fontSize="9">System Monitor</text>
-            </g>
-         </svg>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-        <div className="flex gap-3 items-start p-4 bg-slate-950/50 rounded-lg">
-            <Zap className="text-yellow-500 shrink-0 mt-1" size={18} />
-            <div>
-              <h4 className="text-sm font-bold text-slate-200">電源關鍵 (AnDAPT)</h4>
-              <p className="text-xs text-slate-400 mt-1">
-                AS16sch 使用 AnDAPT PMIC。務必確認 1.0V (Core) 與 1.8V (Aux) 的上電順序，否則 FPGA 無法初始化。
-              </p>
-            </div>
-        </div>
-        <div className="flex gap-3 items-start p-4 bg-slate-950/50 rounded-lg">
-            <MemoryStick className="text-red-500 shrink-0 mt-1" size={18} />
-            <div>
-              <h4 className="text-sm font-bold text-slate-200">DDR3L 佈線</h4>
-              <p className="text-xs text-slate-400 mt-1">
-                低電壓記憶體 (1.35V)。PCB Layout 必須嚴格執行阻抗匹配 (40Ω/50Ω) 與等長走線，避免畫面撕裂。
-              </p>
-            </div>
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
-const LedComparePanel = () => {
-  const [mode, setMode] = useState('apex');
-  const [isBackupActive, setIsBackupActive] = useState(false);
-
-  // SVG Configuration
-  const svgWidth = 600;
-  const svgHeight = 200;
-  const ledY = 80;
-  const ledSize = 60;
-  const gap = 80;
-  const startX = 50;
-
-  // Calculate Positions
-  const fpgaX = startX;
-  const led1X = fpgaX + gap + 40;
-  const led2X = led1X + ledSize + gap;
-  const led3X = led2X + ledSize + gap;
-
-  // Line Color
-  const mainLineColor = (isBackupActive && mode === 'apex') ? '#334155' : '#06b6d4'; // Gray if broken, Cyan if active
-  const backupLineColor = '#22c55e'; // Green
-
-  return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-        <Lightbulb className="text-yellow-400" /> LED 方案對決
-      </h2>
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Control Column */}
-        <div className="lg:col-span-4 space-y-4">
-          <button 
-            onClick={() => setMode('everlight')}
-            className={`w-full text-left p-4 rounded-xl border transition-all ${
-              mode === 'everlight' 
-                ? 'bg-indigo-900/40 border-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.3)]' 
-                : 'bg-slate-900 border-slate-800 hover:border-indigo-500/50'
-            }`}
-          >
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="font-bold text-indigo-200">Everlight (億光)</h3>
-              <span className="text-xs px-2 py-0.5 rounded bg-indigo-950 text-indigo-400 border border-indigo-800">標準型</span>
-            </div>
-            <ul className="text-xs text-slate-400 space-y-1">
-              <li>• B1010DWN3SA</li>
-              <li>• 8-bit PWM (256 階)</li>
-              <li>• 特色：電流增益調節</li>
-            </ul>
-          </button>
-
-          <button 
-            onClick={() => setMode('apex')}
-            className={`w-full text-left p-4 rounded-xl border transition-all ${
-              mode === 'apex' 
-                ? 'bg-cyan-900/40 border-cyan-500 shadow-[0_0_15px_rgba(6,182,212,0.3)]' 
-                : 'bg-slate-900 border-slate-800 hover:border-cyan-500/50'
-            }`}
-          >
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="font-bold text-cyan-200">Apex (長虹)</h3>
-              <span className="text-xs px-2 py-0.5 rounded bg-cyan-950 text-cyan-400 border border-cyan-800">專業型</span>
-            </div>
-            <ul className="text-xs text-slate-400 space-y-1">
-              <li>• TOS1010RGB</li>
-              <li>• 16-bit 灰度 (HDR Ready)</li>
-              <li>• 特色：斷點續傳 (Backup Line)</li>
-            </ul>
-          </button>
-          
-          <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700 mt-4">
-            <h4 className="text-sm font-semibold text-white mb-2">Marlon 的工程筆記</h4>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              {mode === 'everlight' 
-                ? "Everlight 適合成本敏感專案。8-bit 解析度較低，但 Current Gain 功能可調整白平衡且不佔用 FPGA 灰度資源。" 
-                : "Apex 是高階首選。16-bit 深度解決低亮度斷層。Backup Line (BI) 需佔用額外 Layout 空間，但能大幅提升可靠度。"}
-            </p>
-          </div>
-        </div>
-
-        {/* Right Demo Column - PURE SVG IMPLEMENTATION to prevent layout breakage */}
-        <div className="lg:col-span-8 bg-slate-900 rounded-xl border border-slate-800 p-2 md:p-6 flex flex-col justify-center">
-          <div className="w-full overflow-x-auto">
-            <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full min-w-[500px] h-auto">
-                <defs>
-                   <marker id="arrow-led" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
-                     <path d="M0,0 L0,6 L9,3 z" fill="#64748b" />
-                   </marker>
-                </defs>
-
-                {/* Connection Lines (Main) */}
-                <line x1={fpgaX+40} y1={ledY + 30} x2={led1X} y2={ledY + 30} stroke={mainLineColor} strokeWidth="3" markerEnd="url(#arrow-led)" />
-                <line x1={led1X+ledSize} y1={ledY + 30} x2={led2X} y2={ledY + 30} stroke={mode === 'apex' && isBackupActive ? '#334155' : '#06b6d4'} strokeWidth="3" markerEnd="url(#arrow-led)" />
-                <line x1={led2X+ledSize} y1={ledY + 30} x2={led3X} y2={ledY + 30} stroke="#06b6d4" strokeWidth="3" markerEnd="url(#arrow-led)" />
-
-                {/* Backup Line (Curved) */}
-                {mode === 'apex' && (
-                    <path 
-                      d={`M ${fpgaX+20},${ledY+60} Q ${led1X + ledSize/2},${ledY + 140} ${led2X + 10},${ledY+60}`}
-                      fill="none"
-                      stroke={isBackupActive ? backupLineColor : "#1e293b"}
-                      strokeWidth={isBackupActive ? "3" : "1"}
-                      strokeDasharray="5,5"
-                      className={isBackupActive ? "animate-pulse" : ""}
-                    />
-                )}
-
-                {/* FPGA Block */}
-                <rect x={fpgaX} y={ledY} width="60" height="60" rx="4" fill="#1e293b" stroke="#94a3b8" strokeWidth="2" />
-                <text x={fpgaX+30} y={ledY+35} textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">FPGA</text>
-
-                {/* LED 1 */}
-                <g>
-                    <rect x={led1X} y={ledY} width={ledSize} height={ledSize} rx="4" 
-                          fill={mode === 'apex' && isBackupActive ? "#1e1b4b" : "#1e293b"} 
-                          stroke={mode === 'apex' && isBackupActive ? "#ef4444" : "#475569"} strokeWidth="2" />
-                    {mode === 'apex' && isBackupActive && (
-                        <line x1={led1X+10} y1={ledY+10} x2={led1X+50} y2={ledY+50} stroke="#ef4444" strokeWidth="2" />
-                    )}
-                    <text x={led1X+30} y={ledY+80} textAnchor="middle" fill="#94a3b8" fontSize="10">LED 1</text>
-                </g>
-
-                {/* LED 2 */}
-                <g>
-                    <rect x={led2X} y={ledY} width={ledSize} height={ledSize} rx="4" fill="#1e293b" stroke={isBackupActive ? "#22c55e" : "#475569"} strokeWidth={isBackupActive ? "2" : "2"} />
-                    <text x={led2X+30} y={ledY+80} textAnchor="middle" fill="#94a3b8" fontSize="10">LED 2</text>
-                    {isBackupActive && <text x={led2X+30} y={ledY-10} textAnchor="middle" fill="#22c55e" fontSize="10">Backup Active</text>}
-                </g>
-
-                {/* LED 3 */}
-                <g>
-                    <rect x={led3X} y={ledY} width={ledSize} height={ledSize} rx="4" fill="#1e293b" stroke="#475569" strokeWidth="2" />
-                    <text x={led3X+30} y={ledY+80} textAnchor="middle" fill="#94a3b8" fontSize="10">LED 3</text>
-                </g>
-
-            </svg>
-          </div>
-
-          {mode === 'apex' && (
-            <div className="mt-4 flex justify-center z-10">
-              <button
-                onClick={() => setIsBackupActive(!isBackupActive)}
-                className={`px-4 py-2 rounded-full text-sm font-bold border transition-all ${
-                  isBackupActive 
-                    ? 'bg-red-900/20 text-red-400 border-red-500 hover:bg-red-900/40' 
-                    : 'bg-slate-800 text-slate-400 border-slate-700 hover:border-slate-500'
-                }`}
-              >
-                {isBackupActive ? '重置故障模擬 (Reset)' : '模擬 LED 1 故障 (Fault)'}
-              </button>
-            </div>
-          )}
-          
-          <div className="mt-4 text-center text-xs text-slate-400 px-4">
-             {mode === 'apex' && isBackupActive 
-               ? <span className="text-green-400 block font-bold">訊號成功透過 BI (Backup Input) 繞過故障點！</span>
-               : mode === 'apex' 
-                  ? "正常模式：DI (Data In) 與 BI (Backup) 皆待命。"
-                  : "Everlight 模式：無備份路徑。"}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const FpgaResourcePanel = () => (
-  <div className="space-y-6">
-    <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-      <Cpu className="text-red-400" /> FPGA 資源評估
-    </h2>
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-      <div className="bg-slate-900 rounded-xl border border-slate-800 p-6">
-        <h3 className="text-lg font-semibold text-white mb-6">XC7A35T (現有方案)</h3>
-        <ResourceBar label="Logic Cells (LUTs)" percent={92} color="bg-red-500" warning />
-        <ResourceBar label="Block RAM (BRAM)" percent={85} color="bg-orange-500" warning />
-        <ResourceBar label="DSP Slices" percent={60} color="bg-blue-500" />
-        <ResourceBar label="IO Pins" percent={75} color="bg-green-500" />
-
-        <div className="mt-8 p-4 bg-red-950/30 border border-red-900/50 rounded-lg flex gap-3">
-          <AlertTriangle className="text-red-500 shrink-0" />
-          <p className="text-sm text-red-200">
-            <strong>高風險警告：</strong> 為了驅動 Apex 16-bit LED，需要大量的 Gamma 校正邏輯與 PWM 計數器。35T 的 LUTs 幾乎滿載，這會導致時序收斂 (Timing Closure) 極度困難，甚至無法佈線。
-          </p>
-        </div>
-      </div>
-
-      <div className="bg-slate-900 rounded-xl border border-slate-800 p-6 opacity-70 hover:opacity-100 transition-opacity">
-        <h3 className="text-lg font-semibold text-slate-300 mb-6">XC7A100T (建議升級)</h3>
-        <ResourceBar label="Logic Cells (LUTs)" percent={35} color="bg-green-500" />
-        <ResourceBar label="Block RAM (BRAM)" percent={30} color="bg-green-500" />
-        <ResourceBar label="DSP Slices" percent={20} color="bg-green-500" />
-        <ResourceBar label="IO Pins" percent={40} color="bg-green-500" />
+        // --- 4. 定義圖標組件 (替代 lucide-react) ---
+        // 為了讓這個單一檔案能運作，我們將圖標轉為 SVG 代碼
         
-        <div className="mt-8 p-4 bg-slate-800 border border-slate-700 rounded-lg">
-          <p className="text-sm text-slate-400">
-            升級到 100T 可以提供足夠的餘裕來實作色彩校正 (Color Correction)、縮放 (Scaling) 甚至內嵌 MicroBlaze 軟核 CPU。
-          </p>
-        </div>
-      </div>
-    </div>
-  </div>
-);
+        const IconBase = ({ children, size = 24, className = "" }) => (
+            <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                width={size} 
+                height={size} 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                className={className}
+            >
+                {children}
+            </svg>
+        );
 
-const ResourceBar = ({ label, percent, color, warning }) => (
-  <div className="mb-4">
-    <div className="flex justify-between text-sm mb-1">
-      <span className="text-slate-300">{label}</span>
-      <span className={`font-mono ${warning ? 'text-red-400 font-bold' : 'text-slate-400'}`}>{percent}%</span>
-    </div>
-    <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
-      <div 
-        className={`h-full ${color}`} 
-        style={{ width: `${percent}%` }} 
-      />
-    </div>
-  </div>
-);
+        const Activity = (props) => (
+            <IconBase {...props}>
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+            </IconBase>
+        );
 
-const ActionPlanPanel = () => (
-  <div className="space-y-6">
-    <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-      <ListTodo className="text-green-400" /> 行動清單 (Action Plan)
-    </h2>
+        const LayoutDashboard = (props) => (
+            <IconBase {...props}>
+                <rect width="7" height="9" x="3" y="3" rx="1" />
+                <rect width="7" height="5" x="14" y="3" rx="1" />
+                <rect width="7" height="9" x="14" y="12" rx="1" />
+                <rect width="7" height="5" x="3" y="16" rx="1" />
+            </IconBase>
+        );
 
-    <div className="grid gap-4">
-      <ChecklistItem 
-        title="1. LED 最終決策" 
-        desc="依據預算與畫質要求二選一。若選 Apex，PCB 需預留 BI 走線；若選 Everlight，需確認電流增益調整流程。"
-        priority="High"
-      />
-      <ChecklistItem 
-        title="2. FPGA 虛擬驗證 (Dummy Synthesis)" 
-        desc="在 Vivado 中針對 XC7A35T 建立一個含有 16-bit PWM 邏輯的專案進行綜合，確認 LUT 使用率是否超過 80%。"
-        priority="High"
-      />
-      <ChecklistItem 
-        title="3. 電源完整性模擬 (PI)" 
-        desc="AnDAPT 方案需確認在全白畫面 (最大電流) 下的電壓降 (IR Drop) 是否在容許範圍內。"
-        priority="Medium"
-      />
-      <ChecklistItem 
-        title="4. MCU 介面定義" 
-        desc="定義 STM32/ESP32 與 FPGA 之間的通訊暫存器地圖 (Register Map)，用於回報溫度、電壓及寫入顯示參數。"
-        priority="Medium"
-      />
-    </div>
-  </div>
-);
+        const Server = (props) => (
+            <IconBase {...props}>
+                <rect width="20" height="8" x="2" y="2" rx="2" ry="2" />
+                <rect width="20" height="8" x="2" y="14" rx="2" ry="2" />
+                <line x1="6" x2="6.01" y1="6" y2="6" />
+                <line x1="6" x2="6.01" y1="18" y2="18" />
+            </IconBase>
+        );
 
-const ChecklistItem = ({ title, desc, priority }) => (
-  <div className="bg-slate-900 p-5 rounded-lg border border-slate-800 flex items-start gap-4 hover:border-cyan-500/30 transition-colors">
-    <div className={`mt-1 w-2 h-2 rounded-full ${priority === 'High' ? 'bg-red-500 shadow-[0_0_8px_red]' : 'bg-yellow-500'}`} />
-    <div>
-      <h3 className="text-base font-bold text-slate-200">{title}</h3>
-      <p className="text-sm text-slate-400 mt-1">{desc}</p>
-    </div>
-  </div>
-);
+        const GitCompare = (props) => (
+            <IconBase {...props}>
+                <circle cx="18" cy="18" r="3" />
+                <circle cx="6" cy="6" r="3" />
+                <path d="M13 6h3a2 2 0 0 1 2 2v7" />
+                <path d="M11 18H8a2 2 0 0 1-2-2V9" />
+            </IconBase>
+        );
 
-const DashboardCard = ({ title, status, icon, description, color, action }) => (
-  <div 
-    onClick={action}
-    className="bg-slate-900 border border-slate-800 p-6 rounded-xl hover:bg-slate-800/80 transition-all cursor-pointer group"
-  >
-    <div className="flex justify-between items-start mb-4">
-      <div className={`p-3 rounded-lg ${
-        color === 'red' ? 'bg-red-900/30 text-red-500' :
-        color === 'orange' ? 'bg-orange-900/30 text-orange-500' :
-        'bg-yellow-900/30 text-yellow-500'
-      }`}>
-        {icon}
-      </div>
-      <span className={`text-xs font-bold px-2 py-1 rounded uppercase tracking-wider ${
-        color === 'red' ? 'bg-red-950 text-red-500 border border-red-900' :
-        color === 'orange' ? 'bg-orange-950 text-orange-500 border border-orange-900' :
-        'bg-yellow-950 text-yellow-500 border border-yellow-900'
-      }`}>
-        {status}
-      </span>
-    </div>
-    <h3 className="text-lg font-bold text-white mb-2 group-hover:text-cyan-400 transition-colors">{title}</h3>
-    <p className="text-sm text-slate-400 leading-relaxed">
-      {description}
-    </p>
-  </div>
-);
+        const Cpu = (props) => (
+            <IconBase {...props}>
+                <rect x="4" y="4" width="16" height="16" rx="2" />
+                <rect x="9" y="9" width="6" height="6" />
+                <path d="M15 2v2" /><path d="M15 20v2" /><path d="M2 15h2" /><path d="M2 9h2" />
+                <path d="M20 15h2" /><path d="M20 9h2" /><path d="M9 2v2" /><path d="M9 20v2" />
+            </IconBase>
+        );
 
-export default App;
+        const ListTodo = (props) => (
+            <IconBase {...props}>
+                <rect x="3" y="5" width="6" height="6" rx="1" />
+                <path d="m3 17 2 2 4-4" />
+                <path d="M13 6h8" /><path d="M13 12h8" /><path d="M13 18h8" />
+            </IconBase>
+        );
+
+        const AlertTriangle = (props) => (
+            <IconBase {...props}>
+                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                <path d="M12 9v4" />
+                <path d="M12 17h.01" />
+            </IconBase>
+        );
+
+        const Zap = (props) => (
+            <IconBase {...props}>
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+            </IconBase>
+        );
+
+        const Lightbulb = (props) => (
+            <IconBase {...props}>
+                <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-1 1.5-2.4 1.5-3.8 0-3.2-2.8-6-6-6s-6 2.8-6 6c0 1.3.5 2.8 1.5 3.8.8.8 1.3 1.5 1.5 2.5" />
+                <path d="M9 18h6" />
+                <path d="M10 22h4" />
+            </IconBase>
+        );
+
+        // --- 5. 應用程式主邏輯 (V5 Code) ---
+
+        const App = () => {
+            const [activeView, setActiveView] = useState('overview');
+            const [isMobile, setIsMobile] = useState(false);
+
+            // Responsive check
+            useEffect(() => {
+                const handleResize = () => setIsMobile(window.innerWidth < 768);
+                handleResize(); // Init
+                window.addEventListener('resize', handleResize);
+                return () => window.removeEventListener('resize', handleResize);
+            }, []);
+
+            const menuItems = [
+                { id: 'overview', label: '總覽', icon: <LayoutDashboard size={20} /> },
+                { id: 'architecture', label: '架構', icon: <Server size={20} /> },
+                { id: 'led-compare', label: '選型', icon: <GitCompare size={20} /> },
+                { id: 'fpga-resource', label: '資源', icon: <Cpu size={20} /> },
+                { id: 'action-plan', label: '行動', icon: <ListTodo size={20} /> },
+            ];
+
+            return (
+                <div className="min-h-screen bg-slate-950 text-slate-200 font-sans selection:bg-cyan-500/30 flex flex-col md:flex-row">
+                
+                {/* Desktop Sidebar (Hidden on Mobile) */}
+                <aside className="hidden md:flex w-64 flex-shrink-0 bg-slate-900 border-r border-slate-800 flex-col sticky top-0 h-screen">
+                    <div className="p-6 border-b border-slate-800">
+                    <div className="flex items-center gap-3 mb-1">
+                        <div className="bg-cyan-600 p-2 rounded-lg shadow-lg shadow-cyan-500/20">
+                        <Activity className="text-white" size={24} />
+                        </div>
+                        <div>
+                        <h1 className="text-lg font-bold text-white tracking-tight leading-tight">LED Project</h1>
+                        <span className="text-cyan-400 text-xs font-normal">Engineering Hub</span>
+                        </div>
+                    </div>
+                    </div>
+                    <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto no-scrollbar">
+                    {menuItems.map((item) => (
+                        <button
+                        key={item.id}
+                        onClick={() => setActiveView(item.id)}
+                        className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all ${
+                            activeView === item.id 
+                            ? 'bg-cyan-900/30 text-cyan-400 border border-cyan-500/30 shadow-sm' 
+                            : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                        }`}
+                        >
+                        {item.icon}
+                        {item.label}
+                        </button>
+                    ))}
+                    </nav>
+                    <div className="p-4 border-t border-slate-800">
+                    <div className="bg-slate-800/50 rounded-lg p-3 flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-xs font-bold text-white">M</div>
+                        <div>
+                        <div className="text-xs font-medium text-white">Marlon</div>
+                        <div className="text-[10px] text-slate-400">Firmware Eng.</div>
+                        </div>
+                    </div>
+                    </div>
+                </aside>
+
+                {/* Main Content Area */}
+                <main className="flex-1 p-4 md:p-8 pb-24 md:pb-8 w-full overflow-hidden">
+                    <div className="max-w-5xl mx-auto">
+                    {activeView === 'overview' && <OverviewPanel setActiveView={setActiveView} />}
+                    {activeView === 'architecture' && <ArchitecturePanel />}
+                    {activeView === 'led-compare' && <LedComparePanel isMobile={isMobile} />}
+                    {activeView === 'fpga-resource' && <FpgaResourcePanel />}
+                    {activeView === 'action-plan' && <ActionPlanPanel />}
+                    </div>
+                </main>
+
+                {/* Mobile Bottom Navigation (Visible only on Mobile) */}
+                <div className="md:hidden fixed bottom-0 left-0 w-full bg-slate-900 border-t border-slate-800 z-50 flex justify-around items-center h-16 px-2 safe-area-pb shadow-2xl">
+                    {menuItems.map((item) => (
+                    <button
+                        key={item.id}
+                        onClick={() => setActiveView(item.id)}
+                        className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${
+                        activeView === item.id ? 'text-cyan-400' : 'text-slate-500'
+                        }`}
+                    >
+                        {React.cloneElement(item.icon, { size: 18 })}
+                        <span className="text-[10px] font-medium">{item.label}</span>
+                    </button>
+                    ))}
+                </div>
+                </div>
+            );
+        };
+
+        // --- Sub-Panels ---
+
+        const OverviewPanel = ({ setActiveView }) => (
+            <div className="space-y-6 animate-in fade-in duration-300">
+                <header className="mb-4">
+                <h2 className="text-2xl font-bold text-white">專案狀態總覽</h2>
+                <p className="text-slate-400 text-sm">Datasheet 快速風險評估</p>
+                </header>
+
+                <div className="grid grid-cols-1 gap-4">
+                <DashboardCard 
+                    title="FPGA 資源告急" 
+                    status="Critical" 
+                    color="red"
+                    icon={<AlertTriangle size={20} />}
+                    description="XC7A35T 無法負擔 16-bit LED 算法，需升級至 75T/100T。"
+                    action={() => setActiveView('fpga-resource')}
+                />
+                <DashboardCard 
+                    title="LED 協議衝突" 
+                    status="Incompatible" 
+                    color="orange"
+                    icon={<GitCompare size={20} />}
+                    description="Everlight (8-bit) 與 Apex (16-bit) 控制邏輯完全不同。"
+                    action={() => setActiveView('led-compare')}
+                />
+                <DashboardCard 
+                    title="電源管理風險" 
+                    status="Check" 
+                    color="yellow"
+                    icon={<Zap size={20} />}
+                    description="AnDAPT PMIC 需驗證 1.0V/1.8V 上電時序。"
+                    action={() => setActiveView('architecture')}
+                />
+                </div>
+            </div>
+        );
+
+        const ArchitecturePanel = () => (
+            <div className="space-y-4 animate-in fade-in duration-300">
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <Server className="text-cyan-500" size={24} /> 硬體架構圖
+                </h2>
+                
+                <div className="bg-slate-900 rounded-xl border border-slate-800 p-4 shadow-lg">
+                {/* Mobile-Friendly SVG Diagram */}
+                <div className="w-full relative aspect-[16/10] md:aspect-[2/1]">
+                    <svg viewBox="0 0 800 500" className="w-full h-full">
+                        <defs>
+                        <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+                            <path d="M0,0 L0,6 L9,3 z" fill="#64748b" />
+                        </marker>
+                        </defs>
+                        
+                        {/* Background Grid */}
+                        <path d="M0 0 H800 V500 H0 Z" fill="#0f172a" opacity="0.3" />
+
+                        {/* Central FPGA */}
+                        <g transform="translate(250, 200)">
+                        <rect width="300" height="120" rx="10" fill="#1e293b" stroke="#06b6d4" strokeWidth="3" />
+                        <text x="150" y="50" textAnchor="middle" fill="white" fontSize="20" fontWeight="bold">Artix-7 FPGA</text>
+                        <text x="150" y="80" textAnchor="middle" fill="#94a3b8" fontSize="14">XC7A35T / 100T</text>
+                        </g>
+
+                        {/* DDR3 - Top */}
+                        <g transform="translate(325, 40)">
+                        <rect width="150" height="80" rx="6" fill="#1e293b" stroke="#ef4444" strokeWidth="2" />
+                        <text x="75" y="45" textAnchor="middle" fill="#ef4444" fontSize="16" fontWeight="bold">DDR3L</text>
+                        <line x1="75" y1="80" x2="75" y2="200" stroke="#ef4444" strokeWidth="2" strokeDasharray="5,5" />
+                        </g>
+
+                        {/* Flash - Bottom */}
+                        <g transform="translate(325, 380)">
+                        <rect width="150" height="80" rx="6" fill="#1e293b" stroke="#eab308" strokeWidth="2" />
+                        <text x="75" y="45" textAnchor="middle" fill="#eab308" fontSize="16" fontWeight="bold">SPI Flash</text>
+                        <line x1="75" y1="0" x2="75" y2="-60" stroke="#eab308" strokeWidth="2" />
+                        </g>
+
+                        {/* Input - Left */}
+                        <g transform="translate(20, 230)">
+                        <rect width="120" height="60" rx="6" fill="#1e293b" stroke="#64748b" strokeWidth="2" />
+                        <text x="60" y="35" textAnchor="middle" fill="#e2e8f0" fontSize="14">Video In</text>
+                        <line x1="120" y1="30" x2="230" y2="30" stroke="#64748b" strokeWidth="2" markerEnd="url(#arrow)" />
+                        </g>
+
+                        {/* Output - Right */}
+                        <g transform="translate(640, 210)">
+                        <rect width="140" height="100" rx="6" fill="#1e1b4b" stroke="#a855f7" strokeWidth="2" />
+                        <text x="70" y="55" textAnchor="middle" fill="#a855f7" fontSize="16" fontWeight="bold">LED Panel</text>
+                        <line x1="-90" y1="50" x2="0" y2="50" stroke="#a855f7" strokeWidth="4" markerEnd="url(#arrow)" />
+                        </g>
+                    </svg>
+                </div>
+                </div>
+            </div>
+        );
+
+        const LedComparePanel = ({ isMobile }) => {
+            const [mode, setMode] = useState('apex');
+            const [isBackup, setIsBackup] = useState(false);
+
+            return (
+                <div className="space-y-6 animate-in fade-in duration-300">
+                <div className="flex items-center justify-between">
+                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                    <Lightbulb className="text-yellow-400" size={24} /> LED 選型模擬
+                    </h2>
+                    <span className="text-xs text-slate-500 bg-slate-900 px-2 py-1 rounded border border-slate-800">
+                    {isMobile ? 'Mobile View' : 'Desktop View'}
+                    </span>
+                </div>
+
+                {/* Control Switcher */}
+                <div className="grid grid-cols-2 gap-2 bg-slate-900 p-1 rounded-lg border border-slate-800">
+                    <button
+                    onClick={() => setMode('everlight')}
+                    className={`py-2 rounded-md text-sm font-medium transition-all ${
+                        mode === 'everlight' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                    }`}
+                    >
+                    Everlight (8-bit)
+                    </button>
+                    <button
+                    onClick={() => setMode('apex')}
+                    className={`py-2 rounded-md text-sm font-medium transition-all ${
+                        mode === 'apex' ? 'bg-cyan-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                    }`}
+                    >
+                    Apex (16-bit Pro)
+                    </button>
+                </div>
+
+                {/* Visualization Container - DUAL MODE SVG */}
+                <div className="bg-slate-900 rounded-xl border border-slate-800 p-6 flex flex-col items-center min-h-[300px]">
+                    
+                    {/* --- MOBILE SVG (Vertical Stack) --- */}
+                    {isMobile && (
+                    <svg viewBox="0 0 300 400" className="w-full max-w-[300px]">
+                        <defs>
+                        <marker id="arrow-v" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                            <path d="M0,0 L0,6 L9,3 z" fill="#64748b" />
+                        </marker>
+                        </defs>
+
+                        {/* FPGA Top */}
+                        <rect x="100" y="10" width="100" height="60" rx="4" fill="#1e293b" stroke="#94a3b8" strokeWidth="2" />
+                        <text x="150" y="45" textAnchor="middle" fill="white" fontSize="14" fontWeight="bold">FPGA</text>
+
+                        {/* Down Line 1 */}
+                        <line x1="150" y1="70" x2="150" y2="120" stroke="#06b6d4" strokeWidth="3" markerEnd="url(#arrow-v)" />
+
+                        {/* LED 1 */}
+                        <rect x="110" y="120" width="80" height="80" rx="4" 
+                            fill={mode === 'apex' && isBackup ? "#1e1b4b" : "#1e293b"} 
+                            stroke={mode === 'apex' && isBackup ? "#ef4444" : "#475569"} strokeWidth="2" />
+                        <text x="150" y="165" textAnchor="middle" fill="#94a3b8" fontSize="12">LED 1</text>
+                        
+                        {/* Down Line 2 (Main) */}
+                        <line x1="150" y1="200" x2="150" y2="250" 
+                            stroke={mode === 'apex' && isBackup ? "#334155" : "#06b6d4"} 
+                            strokeWidth="3" markerEnd="url(#arrow-v)" />
+
+                        {/* Backup Curve (Vertical) */}
+                        {mode === 'apex' && (
+                        <path d="M 120,50 Q 40,150 120,260" fill="none" 
+                                stroke={isBackup ? "#22c55e" : "#334155"} strokeWidth="2" strokeDasharray="4,4"
+                                className={isBackup ? "animate-pulse" : ""} />
+                        )}
+
+                        {/* LED 2 */}
+                        <rect x="110" y="250" width="80" height="80" rx="4" fill="#1e293b" stroke={isBackup ? "#22c55e" : "#475569"} strokeWidth="2" />
+                        <text x="150" y="295" textAnchor="middle" fill="#94a3b8" fontSize="12">LED 2</text>
+                    </svg>
+                    )}
+
+                    {/* --- DESKTOP SVG (Horizontal Flow) --- */}
+                    {!isMobile && (
+                    <svg viewBox="0 0 600 200" className="w-full">
+                        <defs>
+                        <marker id="arrow-h" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                            <path d="M0,0 L0,6 L9,3 z" fill="#64748b" />
+                        </marker>
+                        </defs>
+
+                        {/* FPGA Left */}
+                        <rect x="20" y="70" width="80" height="60" rx="4" fill="#1e293b" stroke="#94a3b8" strokeWidth="2" />
+                        <text x="60" y="105" textAnchor="middle" fill="white" fontSize="14" fontWeight="bold">FPGA</text>
+
+                        {/* Line 1 */}
+                        <line x1="100" y1="100" x2="180" y2="100" stroke="#06b6d4" strokeWidth="3" markerEnd="url(#arrow-h)" />
+
+                        {/* LED 1 */}
+                        <rect x="180" y="70" width="80" height="80" rx="4" 
+                            fill={mode === 'apex' && isBackup ? "#1e1b4b" : "#1e293b"} 
+                            stroke={mode === 'apex' && isBackup ? "#ef4444" : "#475569"} strokeWidth="2" />
+                        <text x="220" y="115" textAnchor="middle" fill="#94a3b8" fontSize="12">LED 1</text>
+
+                        {/* Line 2 */}
+                        <line x1="260" y1="100" x2="340" y2="100" 
+                            stroke={mode === 'apex' && isBackup ? "#334155" : "#06b6d4"} 
+                            strokeWidth="3" markerEnd="url(#arrow-h)" />
+
+                        {/* Backup Curve (Horizontal) */}
+                        {mode === 'apex' && (
+                        <path d="M 60,130 Q 220,200 380,130" fill="none" 
+                                stroke={isBackup ? "#22c55e" : "#334155"} strokeWidth="2" strokeDasharray="4,4"
+                                className={isBackup ? "animate-pulse" : ""} />
+                        )}
+
+                        {/* LED 2 */}
+                        <rect x="340" y="70" width="80" height="80" rx="4" fill="#1e293b" stroke={isBackup ? "#22c55e" : "#475569"} strokeWidth="2" />
+                        <text x="380" y="115" textAnchor="middle" fill="#94a3b8" fontSize="12">LED 2</text>
+
+                        {/* Line 3 */}
+                        <line x1="420" y1="100" x2="500" y2="100" stroke="#06b6d4" strokeWidth="3" markerEnd="url(#arrow-h)" />
+                    </svg>
+                    )}
+
+                    {/* Legend / Status Text */}
+                    <div className="mt-4 text-center">
+                    {mode === 'apex' && (
+                        <button
+                        onClick={() => setIsBackup(!isBackup)}
+                        className={`px-4 py-2 rounded-full text-xs font-bold border transition-colors ${
+                            isBackup 
+                            ? 'bg-red-900/30 text-red-400 border-red-500' 
+                            : 'bg-slate-800 text-slate-400 border-slate-700'
+                        }`}
+                        >
+                        {isBackup ? '重置模擬 (Reset)' : '模擬故障 (Simulate Fault)'}
+                        </button>
+                    )}
+                    <p className="mt-3 text-xs text-slate-400">
+                        {mode === 'apex' && isBackup 
+                        ? <span className="text-green-400 font-bold">備份線路 (Backup) 啟動！訊號成功繞過壞點。</span>
+                        : mode === 'apex'
+                        ? "正常模式：主訊號 (DI) 與 備份訊號 (BI) 皆就緒。"
+                        : "Everlight 模式：無備份機制，單點故障將導致後段無訊號。"}
+                    </p>
+                    </div>
+                </div>
+                
+                {/* Specs Box */}
+                <div className="bg-slate-900 rounded-lg p-4 border border-slate-800 text-sm space-y-2">
+                    <h4 className="text-slate-200 font-bold border-b border-slate-800 pb-2 mb-2">
+                    {mode === 'everlight' ? 'Everlight B1010' : 'Apex TOS1010RGB'} 規格重點
+                    </h4>
+                    <div className="flex justify-between">
+                    <span className="text-slate-500">灰度:</span>
+                    <span className="text-slate-300">{mode === 'everlight' ? '8-bit (256階)' : '16-bit (65536階)'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                    <span className="text-slate-500">特色:</span>
+                    <span className="text-cyan-400">{mode === 'everlight' ? '電流增益 (Current Gain)' : '斷點續傳 (Backup)'}</span>
+                    </div>
+                </div>
+                </div>
+            );
+        };
+
+        const FpgaResourcePanel = () => (
+            <div className="space-y-6 animate-in fade-in duration-300">
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <Cpu className="text-red-400" size={24} /> FPGA 資源評估
+                </h2>
+                
+                <div className="bg-slate-900 rounded-xl border border-slate-800 p-5">
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-bold text-white">XC7A35T (目前方案)</h3>
+                    <span className="px-2 py-0.5 rounded bg-red-950 text-red-500 border border-red-900 text-xs font-bold">高風險</span>
+                </div>
+                
+                <div className="space-y-4">
+                    <ResourceBar label="LUTs (邏輯單元)" percent={92} color="bg-red-600" />
+                    <ResourceBar label="BRAM (記憶體)" percent={85} color="bg-orange-500" />
+                    <ResourceBar label="IO Pins" percent={75} color="bg-yellow-500" />
+                </div>
+
+                <div className="mt-6 p-4 bg-red-900/10 border border-red-900/30 rounded-lg flex gap-3 items-start">
+                    <AlertTriangle className="text-red-500 shrink-0 mt-0.5" size={16} />
+                    <p className="text-xs text-red-300 leading-relaxed">
+                    若使用 Apex 16-bit 協議，PWM 生成邏輯將佔滿 35T 的資源，極高機率導致佈線失敗 (Routing Failure)。建議升級至 <strong>XC7A75T</strong>。
+                    </p>
+                </div>
+                </div>
+            </div>
+        );
+
+        const ResourceBar = ({ label, percent, color }) => (
+            <div>
+                <div className="flex justify-between text-xs mb-1">
+                <span className="text-slate-400">{label}</span>
+                <span className="text-slate-200 font-mono">{percent}%</span>
+                </div>
+                <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                <div className={`h-full ${color}`} style={{ width: `${percent}%` }} />
+                </div>
+            </div>
+        );
+
+        const ActionPlanPanel = () => (
+            <div className="space-y-6 animate-in fade-in duration-300">
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <ListTodo className="text-green-400" size={24} /> 行動清單
+                </h2>
+                <div className="grid gap-3">
+                <ActionItem 
+                    step="1" title="選定 LED" 
+                    desc="決定要 Apex (高畫質/備份) 還是 Everlight (成本/簡易)。" 
+                    color="border-l-4 border-red-500"
+                />
+                <ActionItem 
+                    step="2" title="FPGA 試跑" 
+                    desc="在 Vivado 針對 XC7A35T 進行綜合 (Synthesis)，確認資源餘裕。" 
+                    color="border-l-4 border-orange-500"
+                />
+                <ActionItem 
+                    step="3" title="MCU 定義" 
+                    desc="規劃 STM32 與 FPGA 的 I2C Register Map (溫度/電源/配置)。" 
+                    color="border-l-4 border-green-500"
+                />
+                </div>
+            </div>
+        );
+
+        const ActionItem = ({ step, title, desc, color }) => (
+            <div className={`bg-slate-900 p-4 rounded-r-lg border-y border-r border-slate-800 ${color}`}>
+                <div className="flex items-center gap-2 mb-1">
+                <span className="bg-slate-800 text-slate-300 text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold">{step}</span>
+                <h3 className="font-bold text-slate-200 text-sm">{title}</h3>
+                </div>
+                <p className="text-xs text-slate-400 pl-7">{desc}</p>
+            </div>
+        );
+
+        const DashboardCard = ({ title, status, icon, description, color, action }) => (
+            <div onClick={action} className="bg-slate-900 border border-slate-800 p-4 rounded-xl active:scale-95 transition-transform cursor-pointer">
+                <div className="flex justify-between items-start mb-3">
+                <div className={`p-2 rounded-lg ${
+                    color === 'red' ? 'bg-red-900/20 text-red-500' :
+                    color === 'orange' ? 'bg-orange-900/20 text-orange-500' :
+                    'bg-yellow-900/20 text-yellow-500'
+                }`}>
+                    {icon}
+                </div>
+                <span className={`text-[10px] font-bold px-2 py-1 rounded border ${
+                    color === 'red' ? 'border-red-900 text-red-500' :
+                    color === 'orange' ? 'border-orange-900 text-orange-500' :
+                    'border-yellow-900 text-yellow-500'
+                }`}>{status}</span>
+                </div>
+                <h3 className="font-bold text-slate-200 mb-1">{title}</h3>
+                <p className="text-xs text-slate-400 leading-relaxed">{description}</p>
+            </div>
+        );
+
+        // --- 6. 渲染到 Root ---
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+
+    </script>
+</body>
+</html>
